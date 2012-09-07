@@ -1,0 +1,12 @@
+{% extends "master.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+    <h1>{{title}}</h1>
+    <div id="submittedData">{% block formSubmitted %}{% endblock %}</div>
+    <h3>Enter new pin:</h3>
+    <form action="/submit" method="GET">
+         <div><label for="imageURL">Image URL: </label><input name="imageURL" type="text" style="width:400px;"></input></div> 
+         <div><label for="caption">Caption: </label><input name="caption" type="text" style="width:400px;"></input></div>
+         <div><input type="submit" value="Submit"></div>
+    </form>
+{% endblock %}
