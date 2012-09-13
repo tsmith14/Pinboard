@@ -1,12 +1,29 @@
 {% extends "master.html" %}
-{% block title %}{{ title }}{% endblock %}
 {% block content %}
-    <h1>{{title}}</h1>
-    <div id="submittedData">{% block formSubmitted %}{% endblock %}</div>
-    <h3>Enter new pin:</h3>
-    <form action="/submit" method="GET">
-         <div><label for="imageURL">Image URL: </label><input name="imageURL" type="text" style="width:400px;"></input></div> 
-         <div><label for="caption">Caption: </label><input name="caption" type="text" style="width:400px;"></input></div>
-         <div><input type="submit" value="Submit"></div>
-    </form>
+    <div id="widgetBox">
+		<div class="widgetTitleBox">
+		<div class="widgetTitle">Enter New Pin:</div>
+		</div>
+		
+		<div class="widgetContentBox">
+			<div class="widgetContent">
+			 {% if imageUrl %}
+				<div id="submittedData">    
+					<h3>You just entered:</h3>
+					<ul>
+						<li>Image URL: {{ imageUrl }} </li>
+						<li>Caption : {{ caption }} </li>
+					</ul>
+  				</div>
+  			{% endif %}
+		    	
+	    		<form action="/" method="GET">
+	         	<div><label for="imageUrl">Image URL: </label><input name="imageUrl" type="text" style="width:400px;"></input></div> 
+	       		<div><label for="caption">Caption: </label><input name="caption" type="text" style="width:400px;"></input></div>
+	       		<div><input type="submit" value="Submit"></div>
+	   			</form>
+			</div>
+		</div>
+	</div>
+   
 {% endblock %}

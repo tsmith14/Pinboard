@@ -1,13 +1,19 @@
 application: tsmith14-pinboard
-version: 2
+version: 3
 runtime: python27
 api_version: 1
 threadsafe: true
 
 handlers:
-- url: /.*
+- url: /
   script: Main.app
   
+- url: /submit
+  script: Main.app
+  
+- url: /css
+  static_dir: css
+
 libraries:
 - name: jinja2
   version: latest
