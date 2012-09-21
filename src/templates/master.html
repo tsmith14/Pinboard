@@ -12,6 +12,7 @@
 			{% if email %}
 			<a href="{{ logoutUrl }}" id="logoutButton" class="button">Logout</a>
 			<div id="username">{{ email }}</div>
+			<a href= "/pin" id="myPinsButton" class="button">My Pins</a>
 			{% else %}
 				<a href="{{ loginUrl }}" id="loginButton" class="button">Login</a>
 			{% endif %}
@@ -20,7 +21,12 @@
 	</div>
 	
 	<div id="content">
-		<div id="title">{{ title }}</div>
+	  <div style="position:relative">
+		<div id="title">{{ title }}</div>		
+		<div class="navHolder">
+		 {% block navContent %}{% endblock %}
+		</div>
+	  </div>
 		
 		{% block content %}{% endblock %}
 		

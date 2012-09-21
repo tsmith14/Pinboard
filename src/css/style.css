@@ -45,6 +45,12 @@ html,body
 	float:right;
 	margin-left:20px;
 }
+#myPinsButton
+{
+	float:right;
+	margin-right:20px;
+}
+
 #footer
 {
 	position:absolute;
@@ -72,6 +78,10 @@ html,body
 	text-decoration: none;
 }
 
+a
+{
+	color:#24687F;
+}
 
 
 #content
@@ -87,8 +97,36 @@ html,body
 {
 	font-size:3em;
 	font-weight:bold;
+	width:70%;
 }
 
+.navHolder
+{
+	width:30%; 
+	position:absolute; 
+	right:0px; 
+	top:5px;
+}
+
+.navigation-items 
+{
+	list-style: none;
+	margin-left:0px;
+	float:right;
+}
+
+.navigation-items> li 
+{
+	display: inline;
+  	list-style-type: none;
+  	padding: 13px 10px 6px 10px;
+  //border-right:1px solid #a7a7a9;
+ }
+.navigation-items> li 
+{
+	font-size:1.25em;
+}
+ 
 #widgetBox
 {
 	margin-left:auto; 
@@ -123,4 +161,117 @@ html,body
 	font-size:1.15em;
 	background-color:#EDEAE8;
 	color:#404040;
+}
+
+.pinBox
+{
+	margin-left:auto; 
+	margin-right:auto;
+	margin-top:30px; 
+	width:50%;
+	min-width:350px;
+	min-height:250px;
+	height:80%;
+	border:1px solid #999;
+	background-color:#EDEAE8;
+	position:relative;
+}
+
+.pin-imageContainer
+{
+	margin-left:auto; 
+	margin-right:auto;
+	height:auto;
+}
+
+.pin-image
+{
+	width:80%;
+    height: auto;
+	margin-left:auto; 
+	margin-right:auto;
+	padding-top:10px;
+	padding-bottom:10px;
+	display:block;
+}
+
+.pin-captionBox
+{
+	height:auto;
+	min-height:20px;
+	width:100%;
+	background-color:#404040;	
+	//position:absolute;
+	//bottom: 0px;
+}
+
+.pin-caption
+{
+	font-size:1.15em;
+	padding:10px;
+	text-align:center;
+	color:white;
+}
+.pin-date
+{
+	font-size:.75em;
+	padding-right:15px;
+	text-align:right;
+	color:white;
+}
+
+.pinBox-thumbnail
+{
+	margin-left:auto; 
+	margin-right:auto;
+	margin-top:30px; 
+	width:20%;
+	min-width:150px;
+	min-height:100px;
+	height:80%;
+	border:1px solid #999;
+	background-color:#EDEAE8;
+	position:relative;
+}
+
+.pin-thumbnail-imageContainer
+{
+	margin-left:auto; 
+	margin-right:auto;
+	height:auto;
+}
+
+.pin-thumbnail-image
+{
+	width:80%;
+    height: auto;
+	margin-left:auto; 
+	margin-right:auto;
+	padding-top:10px;
+	padding-bottom:10px;
+	display:block;
+}
+.pin-thumbnail-captionBox
+{
+	height:auto;
+	min-height:15px;
+	width:100%;
+	background-color:#404040;	
+	//position:absolute;
+	//bottom: 0px;
+}
+
+.pin-thumbnail-caption
+{
+	font-size:1em;
+	padding:5px;
+	text-align:center;
+	color:white;
+}
+.pin-thumbnail-date
+{
+	font-size:.6em;
+	padding-right:7px;
+	text-align:right;
+	color:white;
 }

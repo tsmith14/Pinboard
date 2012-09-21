@@ -1,0 +1,46 @@
+{% extends "master.html" %}
+{% block navContent %}
+<ul style="" class="navigation-items">
+<li><a href="/pin">Return to My Pins</a></li>	
+</ul>		
+{% endblock %}
+
+{% block content %}
+	{% if notFound %}
+		<h2>No Pin Found</h2>
+	{% else %}
+		<div class="pinBox">
+			<div class="pin-imageContainer">
+				<img class="pin-image" src="{{ pin.imgUrl }}">
+			</div>
+			<div class="pin-captionBox">
+				<div class="pin-caption">{{ pin.caption }}</div>
+				<div class="pin-date">{{ pin.date|datetimeformat}}</div>
+			</div>
+		</div>
+		
+		<div id="widgetBox">
+		<div class="widgetTitleBox">
+		<div class="widgetTitle">Edit Pin:</div>
+		</div>
+		
+		<div class="widgetContentBox">
+			<div class="widgetContent">
+	    		<form action="/pin/{{ pinID }}" method="POST">
+	         	<div><label for="imageUrl">Image URL: </label><input name="imageUrl" type="text" style="width:400px;" value="{{ pin.imgUrl }}"></input></div> 
+	       		<div><label for="caption">Caption: </label><input name="caption" type="text" style="width:400px;" value="{{ pin.caption }}"></input></div>
+	       		<input name="method" type="hidden" value="Update"></input>
+	       		<div><input type="submit" value="Submit"></div>
+	   			</form>
+	   			<form action="/pin/{{ pinID }}" method="POST">
+	       		<input name="method" type="hidden" value="Delete"></input>
+	   			<div><input type="submit" value="Delete"></div>
+	   			</form>
+	   			
+			</div>
+		</div>
+	</div>
+	{% endif %}
+	
+{% endblock %}
+

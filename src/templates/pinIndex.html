@@ -1,0 +1,27 @@
+{% extends "master.html" %}
+{% block navContent %}
+<ul style="" class="navigation-items">
+<li><a href="/">Return Home</a></li>	
+</ul>		
+{% endblock %}
+
+{% block content %}
+	{% if notFound %}
+		<h2>You have no pins</h2>
+	{% else %}
+	   	{% for pin in pins %}
+			<div class="pinBox-thumbnail">
+			 <a href="/pin/{{ pin.key().id() }}">
+				<div class="pin-thumbnail-imageContainer">
+					<img class="pin-thumbnail-image" src="{{ pin.imgUrl }}">
+				</div>
+				<div class="pin-thumbnail-captionBox">
+					<div class="pin-thumbnail-caption">{{ pin.caption }}</div>
+					<div class="pin-thumbnail-date">{{ pin.date|datetimeformat}}</div>
+				</div>
+			  </a>
+			</div>
+		{% endfor %}
+	{% endif %}
+	
+{% endblock %}
