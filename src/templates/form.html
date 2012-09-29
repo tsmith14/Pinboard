@@ -2,12 +2,12 @@
 {% block content %}
     <div id="widgetBox">
 		<div class="widgetTitleBox">
-		<div class="widgetTitle">Enter New Pin:</div>
+		<div class="widgetTitle">Create New Pin:</div>
 		</div>
 		
 		<div class="widgetContentBox">
 			<div class="widgetContent">
-			 {% if imageUrl %}
+<!-- 			 {% if imageUrl %}
 				<div id="submittedData">    
 					<h3>You just entered:</h3>
 					<ul>
@@ -15,15 +15,44 @@
 						<li>Caption : {{ caption }} </li>
 					</ul>
   				</div>
-  			{% endif %}
+  			{% endif %} -->
 		    	
 	    		<form action="/pin" method="POST">
 	         	<div><label for="imageUrl">Image URL: </label><input name="imageUrl" type="text" style="width:400px;"></input></div> 
 	       		<div><label for="caption">Caption: </label><input name="caption" type="text" style="width:400px;"></input></div>
-	       		<div><input type="submit" value="Submit"></div>
+	       		<div><label for="private">Private: </label>
+		       		<select name="private" style="width:200px;">
+			       		<option value="1">Private</option>
+			       		<option value="0">Public</option>	   
+		       		</select>
+	       		</div>	    
+	       		<div><input type="submit" value="Create" style="width:50%;" class="fancyButton submitButton"></div>
 	   			</form>
 			</div>
 		</div>
 	</div>
+	
+    <div id="widgetBox">
+	<div class="widgetTitleBox">
+	<div class="widgetTitle">Create New Board:</div>
+	</div>	
+		<div class="widgetContentBox">
+			<div class="widgetContent">
+					    	
+	    		<form action="/board" method="POST">
+	         	<div><label for="name">Name: </label><input name="name" type="text" style="width:400px;"></input></div> 
+	       		<div><label for="private">Private: </label>
+		       		<select name="private" style="width:200px;">
+			       		<option value="1">Private</option>
+			       		<option value="0">Public</option>	   
+		       		</select>
+	       		</div>	    
+	       		<div><input type="submit" value="Create" style="width:50%;" class="fancyButton submitButton"></div>
+	   			</form>
+			</div>
+		</div>
+		
+	 </div>
+
    
 {% endblock %}

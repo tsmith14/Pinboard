@@ -1,0 +1,25 @@
+{% extends "master.html" %}
+{% block navContent %}
+<ul style="" class="navigation-items">
+<li><a href="/">Return Home</a></li>	
+</ul>		
+{% endblock %}
+
+{% block content %}
+	{% if boards.count()==0 %}
+		<h2>You have no boards</h2>
+	{% else %}
+	    {% for board in boards %}
+			 <a href="/board/{{ board.key().id() }}">
+				{{ board.name }}
+			  </a><br/>
+		{% endfor %} 
+	{% endif %}
+	<h1>Public Boards</h1>
+		 {% for board in publicBoards %}
+			 <a href="/board/{{ board.key().id() }}">
+				{{ board.name }}
+			  </a><br/>
+		{% endfor %} 
+	
+{% endblock %}

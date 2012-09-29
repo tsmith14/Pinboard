@@ -15,6 +15,12 @@ html,body
 	width: 100%;
 	height: 50px; 
 	background-color:#24687F;
+	position:fixed;
+	top: 0;
+	box-shadow: 0 1px 3px rgba(34,25,25,0.4);
+	-moz-box-shadow: 0 1px 3px rgba(34,25,25,0.4);
+	-webkit-box-shadow: 0 1px 3px rgba(34,25,25,0.4);
+ 	 z-index:999;
 }
 #headerContent
 {
@@ -22,6 +28,26 @@ html,body
 	margin-left:auto;
 	margin-right:auto;
 }
+
+#homeButton
+{
+	position:absolute;
+	padding-top:3px;
+	color:white;
+	text-decoration: none;	
+	font-weight:bold;
+	font-size:2.5em;
+	
+   // -webkit-text-stroke: 1px blue;
+   /*color: #27c239;
+    text-shadow:
+       3px 3px 0 #333,
+     -1px -1px 0 #333,  
+      1px -1px 0 #333,
+      -1px 1px 0 #333,
+       1px 1px 0 #333; */
+}
+
 .button
 {
 	padding-top:12px;
@@ -45,7 +71,7 @@ html,body
 	float:right;
 	margin-left:20px;
 }
-#myPinsButton
+#myNavButton
 {
 	float:right;
 	margin-right:20px;
@@ -53,12 +79,16 @@ html,body
 
 #footer
 {
-	position:absolute;
+	position:fixed;
 	width: 100%;
 	height: 50px; 
 	background-color:#404040;
 	bottom:0px;
 	left:0px;
+	box-shadow: 0 -1px 0px rgba(34,25,25,0.4);
+	-moz-box-shadow: 0 -1px 0px rgba(34,25,25,0.4);
+	-webkit-box-shadow: 0 -1px 0px rgba(34,25,25,0.4);
+ 	 z-index:999;
 }
 
 #footer .footer-inner
@@ -86,11 +116,15 @@ a
 
 #content
 {
-	padding:10px;
-	padding-bottom:100px;  
+	//padding:10px;
+	//padding-bottom:100px;  
 	width:960px;
 	margin-left:auto;
 	margin-right:auto;
+	padding-top: 70px;
+	padding-bottom: 150px;
+	margin-bottom:50px;
+	height:auto;
 }
 
 #title
@@ -163,18 +197,50 @@ a
 	color:#404040;
 }
 
+.editBox
+{
+	margin-top:30px; 
+	border:1px solid #999;
+	//border-radius:5px;
+	//-moz-border-radius:3px; /* Firefox 3.6 and earlier */
+}
+
+.editBox .editTitleBox
+{
+	min-height:50px;
+	background-color:#404040;
+	color:white;
+}
+
+.editBox .editTitle
+{
+	color:white;
+	//margin-left:10px;
+	padding-top:10px;
+	font-size:1.5em;
+}
+
+.editBox .editContentBox
+{
+	min-height:60px;
+	padding:20px;
+	font-size:1.15em;
+	background-color:#EDEAE8;
+	color:#404040;
+}
+
 .pinBox
 {
-	margin-left:auto; 
-	margin-right:auto;
-	margin-top:30px; 
-	width:50%;
+	/* margin-left:auto; 
+	margin-right:auto; */
+	 margin-top:30px; 
+	/*width:50%;
 	min-width:350px;
-	min-height:250px;
+	min-height:250px; */
 	height:80%;
 	border:1px solid #999;
 	background-color:#EDEAE8;
-	position:relative;
+	//position:relative;
 }
 
 .pin-imageContainer
@@ -225,7 +291,7 @@ a
 	margin-left:auto; 
 	margin-right:auto;
 	margin-top:30px; 
-	width:20%;
+	width:25%;
 	min-width:150px;
 	min-height:100px;
 	height:80%;
@@ -274,4 +340,61 @@ a
 	padding-right:7px;
 	text-align:right;
 	color:white;
+}
+
+.pin-thumbnail-deleteButton
+{
+	height:auto;
+	min-height:40px;
+	width:100%;
+	background-color:#404040;
+	padding-top:10px;
+}
+
+
+.fancyButton {
+	width:50%;
+	margin-left:auto;
+	margin-right:auto;
+	position:relative;
+	display:block;	
+	-moz-border-radius:6px;
+	-webkit-border-radius:6px;
+	border-radius:6px;
+	color:#ffffff;
+	font-family:Arial;
+	font-size:.6em;
+	font-weight:bold;
+	padding:6px 12px;
+	text-decoration:none;
+	
+}
+.submitButton
+{
+	-moz-box-shadow:inset 0px 0px 0px 0px #a4e271;
+	-webkit-box-shadow:inset 0px 0px 0px 0px #a4e271;
+	box-shadow:inset 0px 0px 0px 0px #a4e271;
+	background-color:#3f9415;
+	border:5px solid #23610e;
+	text-shadow:-1px 0px 0px #528009;
+}
+.submitButton:hover {
+	background-color:#18b310;
+}.submitButton:active {
+	position:relative;
+	top:1px;
+}
+
+.deleteButton {
+	-moz-box-shadow:inset 0px 0px 0px 0px #f29c93;
+	-webkit-box-shadow:inset 0px 0px 0px 0px #f29c93;
+	box-shadow:inset 0px 0px 0px 0px #f29c93;
+	background-color:#e81e07;
+	border:5px solid #b32316;
+	text-shadow:-1px 0px 0px #b23e35;
+}.deleteButton:hover {
+	background-color:#c22121;
+}.deleteButton:active {
+	position:relative;
+	top:1px;
 }

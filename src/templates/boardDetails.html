@@ -1,0 +1,87 @@
+{% extends "master.html" %}
+{% block navContent %}
+<ul style="" class="navigation-items">
+<li><a href="/board">Return to My Boards</a></li>	
+</ul>		
+{% endblock %}
+
+{% block content %}
+	{% if notFound %}
+		<h2>No Board Found</h2>
+	{% else %}
+	<div style="position:relative">
+	  <div class="editBox" style="width:30%; height:auto;">
+	  {% if isEditable %}
+		<div class="editTitleBox">
+			<div class="editTitle">Edit</div>
+		</div>
+		<div class="editContentBox">
+			<form action="/board/{{ boardID }}" method="POST">
+	         	<div><label for="name">Name: </label><input name="name" type="text" value="{{ board.name }}" style="width:90%;"></input></div> 
+	       		<div><label for="private">Status: </label>
+		       		<select name="private">
+			       		<option value="1">Private</option>
+			       		<option value="0" {% if not board.private %} selected {% endif %}>Public</option>	   
+		       		</select>
+	       		</div>	    
+	       		<input name="method" type="hidden" value="Update"></input>
+	       		<div><input type="submit" value="Submit" class="fancyButton submitButton"></div>
+	   		</form>
+	   		<hr/>
+	   		<form action="/board/{{ boardID }}" method="POST">
+	   			<div><label for="private">Add Pins: </label>
+		       		<select name="pins" style="min-width:40%; max-width:100%;" multiple="true">
+			       		{% for pin in userPins %}
+			       		 	{% if not board.hasPin(pin.key())  %}
+			       			<option value="{{ pin.key().id() }}">{{ pin.caption }}</option>
+			       		 	{% endif %}
+			       		{% endfor %}	   
+		       		</select>
+	       		</div>	    
+	       		<input name="method" type="hidden" value="Add"></input>
+	       		<div><input type="submit" value="Submit" class="fancyButton submitButton"></div>
+	   		</form>
+	   		<hr/>
+	   		<form action="/board/{{ boardID }}" method="POST" style="position:relative;">
+	       		<input name="method" type="hidden" value="Delete"></input>
+	   			<div><input type="submit" value="Delete" class="fancyButton deleteButton"></div>
+	   		</form>
+	   	   </div>
+	 {% else %}
+	   	<div class="editTitleBox">
+			<div class="editTitle" style="text-align:center;">You do not have rights to edit this board</div>
+		</div>
+	 {% endif %}
+	
+
+
+	   </div>
+		<div style="width:70%; position:absolute; right:0px; top:0px; height:auto; 	padding-bottom: 150px;
+	margin-bottom:50px;">
+		{% for pin in board.getPins() %}
+			<div class="pinBox-thumbnail">
+				<div class="pin-thumbnail-imageContainer">
+					<img class="pin-thumbnail-image" src="{{ pin.imgUrl }}">
+				</div>
+				<div class="pin-thumbnail-captionBox">
+					<div class="pin-thumbnail-caption">{{ pin.caption }}</div>
+					<div class="pin-thumbnail-date">{{ pin.date|datetimeformat}}</div>
+				</div>
+			    {% if isEditable %}
+				<div class="pin-thumbnail-deleteButton">
+					<form action="/board/{{ boardID }}" method="POST">
+						<input name="pinID" type="hidden" value="{{ pin.key().id() }}"></input>
+	       				<input name="method" type="hidden" value="RemovePin"></input>
+	   					<div><input type="submit" value="Remove" class="fancyButton deleteButton"></div>
+	   				</form>
+				</div>
+				{% endif %}
+			</div>
+		{% endfor%}
+		</div>
+	</div>
+
+	{% endif %}
+	
+{% endblock %}
+

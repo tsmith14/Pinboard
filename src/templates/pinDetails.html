@@ -9,6 +9,8 @@
 	{% if notFound %}
 		<h2>No Pin Found</h2>
 	{% else %}
+	<div style="position:relative; height:auto;">
+		<div style="width:60%; position:relative; height: auto; margin-left:40%;">
 		<div class="pinBox">
 			<div class="pin-imageContainer">
 				<img class="pin-image" src="{{ pin.imgUrl }}">
@@ -18,8 +20,23 @@
 				<div class="pin-date">{{ pin.date|datetimeformat}}</div>
 			</div>
 		</div>
+		<div id="widgetBox" style="bottom:40px; width:100%;">
+		<div class="widgetTitleBox">
+		<div class="widgetTitle">Boards:</div>
+		</div>
 		
-		<div id="widgetBox">
+		<div class="widgetContentBox">
+			<div class="widgetContent">
+			{% for board in boards %}
+	    		<a href="/board/{{ board.key().id() }}">{{ board.name }}</a><br/>
+	    	{% endfor %}
+			</div>
+		</div>
+		</div>
+		</div>
+		{% if isEditable %}
+		<div style="width:35%; position:absolute; left:0px; top:0px; margin-top:0px;">
+		<div id="widgetBox" style="margin-top:0px;">
 		<div class="widgetTitleBox">
 		<div class="widgetTitle">Edit Pin:</div>
 		</div>
@@ -27,19 +44,31 @@
 		<div class="widgetContentBox">
 			<div class="widgetContent">
 	    		<form action="/pin/{{ pinID }}" method="POST">
-	         	<div><label for="imageUrl">Image URL: </label><input name="imageUrl" type="text" style="width:400px;" value="{{ pin.imgUrl }}"></input></div> 
-	       		<div><label for="caption">Caption: </label><input name="caption" type="text" style="width:400px;" value="{{ pin.caption }}"></input></div>
+	         	<div><label for="imageUrl">Image URL: </label><input name="imageUrl" type="text" style="width:100%;" value="{{ pin.imgUrl }}"></input></div> 
+	       		<div><label for="caption">Caption: </label><input name="caption" type="text" style="width:100%;" value="{{ pin.caption }}"></input></div>
+	       		<div><label for="private">Private: </label>
+		       		<select name="private" style="width:200px;">
+			       		<option value="1">Private</option>
+			       		<option value="0" {% if not pin.private %} selected {% endif %} >Public</option>	   
+		       		</select>
+	       		</div>
 	       		<input name="method" type="hidden" value="Update"></input>
-	       		<div><input type="submit" value="Submit"></div>
+	       		<div><input type="submit" value="Submit" class="fancyButton submitButton"></div>
 	   			</form>
+	   			<hr/>
 	   			<form action="/pin/{{ pinID }}" method="POST">
 	       		<input name="method" type="hidden" value="Delete"></input>
-	   			<div><input type="submit" value="Delete"></div>
+	   			<div><input type="submit" value="Delete" class="fancyButton deleteButton"></div>
 	   			</form>
 	   			
 			</div>
 		</div>
+		</div>
+
+		</div>
 	</div>
+
+		{% endif %}
 	{% endif %}
 	
 {% endblock %}

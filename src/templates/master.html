@@ -9,10 +9,14 @@
 <div id="wrapper">
 	<div id="header">
 		<div id="headerContent">
+			<div id="logoHolder" style="position:relative; width: 200px;">
+				<a href="/" id="homeButton">Pin It!</a>
+			</div>
 			{% if email %}
 			<a href="{{ logoutUrl }}" id="logoutButton" class="button">Logout</a>
 			<div id="username">{{ email }}</div>
-			<a href= "/pin" id="myPinsButton" class="button">My Pins</a>
+			<a href= "/pin" id="myNavButton" class="button">My Pins</a>
+			<a href= "/board" id="myNavButton" class="button">My Boards</a>
 			{% else %}
 				<a href="{{ loginUrl }}" id="loginButton" class="button">Login</a>
 			{% endif %}
@@ -29,7 +33,6 @@
 	  </div>
 		
 		{% block content %}{% endblock %}
-		
 		
 	</div>
 
