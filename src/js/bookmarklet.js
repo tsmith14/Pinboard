@@ -9,14 +9,12 @@ for (image in images)
 	if (image != "length" || image != "item")
 	{
 		var src = images[image].src;
-		//src = src.trim(); //trim the string (remove whitespaces)
-		console.log(src+"  "+image)
 		if (src == "undefined")
 			console.log("UNDEFINDED "+src+image)
 		if (src!==undefined && srcs.indexOf(src)==-1)
 		{
 			newContent+="<div class='imageContainer' style='display:inline; float:left; margin:20px; text-align:center; width:400px; border: solid #24687F 3px'>";
-			newContent+="<form action='http://localhost:8080/pin' method='POST'>"
+			newContent+="<form action='"+websiteURL+"/pin' method='POST'>"
 			newContent+="<div><img src='"+src+"' style='min-width:100px; max-width:400px;'><input name='imageUrl' value='"+src+"' type='hidden'></input></div>"; 
 			newContent+="<div><label for='caption'>Caption: </label><input name='caption' type='text' style=''></input></div>";
 			newContent+="<div><label for='private'>Private: </label>";
@@ -28,7 +26,6 @@ for (image in images)
 			newContent+="<div><input type='submit' value='Create Pin' style='width:50%; margin-top:10px; margin-bottom:10px;' class='fancyButton submitButton'></div>";
 			newContent+="</form>";
 			newContent+="</div>";
-			//newContent+="<img src='"+src+"' style='width:200px;'>";
 			srcs.push(src);
 		}
 	}
