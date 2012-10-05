@@ -1,5 +1,5 @@
 application: tsmith14-pinboard
-version: 5
+version: 6
 runtime: python27
 api_version: 1
 threadsafe: true
@@ -10,6 +10,9 @@ handlers:
   
 - url: /pic
   static_dir: pic
+  
+- url: /js
+  static_dir: js
   
 - url: /.*
   script: Main.app

@@ -139,7 +139,9 @@ class PinIndex(Universal):
         self.setTemplate("pinIndex.html")
     
     def post(self):
-        self.defineUser()
+        self.checkLogin()
+        if not self.loggedIn:
+            return
         pin = Pin(imgUrl = self.request.get("imageUrl"), caption =  self.request.get("caption"), owner = self.user.user_id())
         pin.setPrivateStatus(self.request.get("private"))
         pin.put()
@@ -171,7 +173,9 @@ class PinDetails(Universal):
         self.setTemplate("pinDetails.html")  
     
     def post(self, pinID):
-        self.defineUser()
+        self.checkLogin()
+        if not self.loggedIn:
+            return
         self.key = db.Key.from_path('Pin', long(pinID))
         self.pin = db.get(self.key)
         if self.pin.owner !=  self.user.user_id():
@@ -217,26 +221,34 @@ class BoardDetails(Universal):
         self.templateValues = {'title': 'Board'}
         self.templateValues['boardID'] = boardID
         self.basicSetup()
-        self.checkLogin()
-        if not self.loggedIn:
-            return
+        self.defineUser()
+        self.loggedIn = True
+        if not self.user:
+            self.loggedIn = False
         self.key = db.Key.from_path('Board', long(boardID))
         self.board = db.get(self.key)
-        if self.board == None:
-            self.templateValues['notFound'] = True
-            self.templateValues['title'] = "Error"
-        else:
-            self.templateValues['notFound'] = False
-            self.templateValues['title'] = self.board.name;
-            self.templateValues['board'] = self.board
-            if self.board.owner == self.user.user_id():
-                self.templateValues['isEditable'] = True
+        if self.loggedIn or not self.board.private:
+            if self.board == None:
+                self.templateValues['notFound'] = True
+                self.templateValues['title'] = "Error"
             else:
-                self.templateValues['isEditable'] = False
-            pins = Pin.all();
-            pins.filter("owner =", self.user.user_id())
-            self.templateValues['userPins'] = pins;
-            
+                self.templateValues['notFound'] = False
+                self.templateValues['title'] = self.board.name;
+                self.templateValues['board'] = self.board
+                if not self.loggedIn:
+                    self.templateValues['isEditable'] = False
+                else:
+                    if self.board.owner == self.user.user_id():
+                        self.templateValues['isEditable'] = True
+                    else:
+                        self.templateValues['isEditable'] = False
+                    pins = Pin.all();
+                    pins.filter("owner =", self.user.user_id())
+                    self.templateValues['userPins'] = pins
+        else:
+            self.redirect("/")
+            return
+                
 
         self.setTemplate("boardDetails.html")  
     
