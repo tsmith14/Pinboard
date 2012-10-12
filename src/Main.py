@@ -179,20 +179,30 @@ class PinDetails(Universal):
         self.key = db.Key.from_path('Pin', long(pinID))
         self.pin = db.get(self.key)
         if self.pin.owner !=  self.user.user_id():
-            self.redirect("/pin")
+            self.response.out.write("Sorry, you do not have rights to edit this pin");
             return
         if self.request.get("method") == "Delete":
             self.pin.removeFromBoards()
             db.delete(self.key)
             self.redirect("/pin")
             return
-        else:
-            self.pin.imgUrl = self.request.get("imageUrl")
-            self.pin.caption =  self.request.get("caption")
+        elif self.request.get("private"):
             self.pin.setPrivateStatus(self.request.get("private"))
-            self.pin.put()
-            self.redirect("/pin/"+str(self.pin.key().id()))
+            self.pin.put();
+            if (self.pin.private):
+                self.response.out.write("Pin is private")
+            else:
+                self.response.out.write( "Pin is public")
             return
+        elif self.request.get("caption"):
+            self.pin.caption = self.request.get("caption")
+            self.pin.put();
+            self.response.out.write(self.pin.caption)
+            return
+        else:
+            self.response.out.write("ERROR")
+            return
+
         
 class BoardIndex(Universal):
     def get(self):

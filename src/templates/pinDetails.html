@@ -9,15 +9,34 @@
 	{% if notFound %}
 		<h2>No Pin Found</h2>
 	{% else %}
-	<div style="position:relative; height:auto;">
-		<div style="width:60%; position:relative; height: auto; margin-left:40%;">
+	<div style="height:auto;">
+		<div style="margin-left:auto; margin-right: auto; width:60%; height: auto;">
 		<div class="pinBox">
 			<div class="pin-imageContainer">
 				<img class="pin-image" src="{{ pin.imgUrl }}">
 			</div>
 			<div class="pin-captionBox">
-				<div class="pin-caption">{{ pin.caption }}</div>
-				<div class="pin-date">{{ pin.date|datetimeformat}}</div>
+				<div style="">
+					<div id="caption" class="pin-caption" style="">{{ pin.caption }}</div>
+					<input id="caption-edit" class="pin-caption" style="padding:4px; margin-left:10%; width:80%; display:none; color:#333;" value="{{ pin.caption }}"></input>
+				</div>
+				{% if isEditable %}
+				<script id="ajaxScript" type="text/javascript" src="/js/pinAjax.js" data-url="/pin/{{ pinID }}"></script>
+				<div style="margin-left:15px;"><label for="private" style="color:white;">Private: </label>
+		       		<select id="private" name="private" style="width:200px;">
+			       		<option value="1">Private</option>
+			       		<option value="0" {% if not pin.private %} selected {% endif %} >Public</option>	   
+		       		</select>
+		       	</div>
+		       	{% endif %}
+		       	<div class="pin-date">{{ pin.date|datetimeformat}}</div>
+		       	{% if isEditable %}
+		       	<hr/>
+	   			<form action="/pin/{{ pinID }}" method="POST">
+	       		<input name="method" type="hidden" value="Delete"></input>
+	   			<div><input type="submit" value="Delete" class="fancyButton deleteButton"></div>
+	   			</form>
+				{% endif %}
 			</div>
 		</div>
 		<div id="widgetBox" style="bottom:40px; width:100%;">
@@ -34,41 +53,6 @@
 		</div>
 		</div>
 		</div>
-		{% if isEditable %}
-		<div style="width:35%; position:absolute; left:0px; top:0px; margin-top:0px;">
-		<div id="widgetBox" style="margin-top:0px;">
-		<div class="widgetTitleBox">
-		<div style="text-align:center;" class="widgetTitle">Edit Pin:</div>
-		</div>
-		
-		<div class="widgetContentBox">
-			<div class="widgetContent">
-	    		<form action="/pin/{{ pinID }}" method="POST">
-	         	<div><label for="imageUrl">Image URL: </label><input name="imageUrl" type="text" style="width:100%;" value="{{ pin.imgUrl }}"></input></div> 
-	       		<div><label for="caption">Caption: </label><input name="caption" type="text" style="width:100%;" value="{{ pin.caption }}"></input></div>
-	       		<div><label for="private">Private: </label>
-		       		<select name="private" style="width:200px;">
-			       		<option value="1">Private</option>
-			       		<option value="0" {% if not pin.private %} selected {% endif %} >Public</option>	   
-		       		</select>
-	       		</div>
-	       		<input name="method" type="hidden" value="Update"></input>
-	       		<div><input type="submit" value="Submit" class="fancyButton submitButton"></div>
-	   			</form>
-	   			<hr/>
-	   			<form action="/pin/{{ pinID }}" method="POST">
-	       		<input name="method" type="hidden" value="Delete"></input>
-	   			<div><input type="submit" value="Delete" class="fancyButton deleteButton"></div>
-	   			</form>
-	   			
-			</div>
-		</div>
-		</div>
-
-		</div>
-	</div>
-
-		{% endif %}
 	{% endif %}
 	
 {% endblock %}
