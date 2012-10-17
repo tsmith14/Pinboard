@@ -6,6 +6,8 @@ Created on Aug 31, 2012
 import webapp2
 import jinja2
 import os
+import json
+import logging
 from google.appengine.ext import db
 from google.appengine.api import users
 
@@ -14,6 +16,9 @@ jinja_environment = jinja2.Environment(
 
 def datetimeformat(value, datetimeformat='%B, %d %I:%M%p'):
     return value.strftime(datetimeformat)
+
+def date_handler(obj):
+    return obj.isoformat() if hasattr(obj, 'isoformat') else obj
 
 jinja_environment.filters['datetimeformat'] = datetimeformat
 
@@ -36,7 +41,6 @@ class Pin(db.Model):
                 return Board.gql("WHERE pins = :1 AND owner = :2 ", self.key(),user.user_id())
             else:
                 return Board.gql("WHERE pins = :1 AND private = :2 ", self.key(),False)
-#            return Board.gql("WHERE pins = :1 AND owner = :2", self.key(),user.user_id())
 
         
         def removeFromBoards(self):
@@ -66,11 +70,6 @@ class Board(db.Model):
                 return True
             else:
                 return False
-#            for pin in self.pins:
-#                if pin==pinKey:
-#                    return True
-#            return False
-        
         
 class Universal(webapp2.RequestHandler):
     def defineUser(self):
@@ -88,10 +87,10 @@ class Universal(webapp2.RequestHandler):
         self.defineUser()
         self.loggedIn = True
         if not self.user:
-            self.redirect("/")
             self.loggedIn = False
-
-            
+    
+    def redirectToHome(self):
+        self.redirect("/")
             
     def setTemplate(self, templateName):
         template = jinja_environment.get_template(templateName)
@@ -108,6 +107,23 @@ class Universal(webapp2.RequestHandler):
         pins.filter("owner !=", self.user.user_id())
         pins.filter("private =",False)
         return pins
+    
+    
+    def generateNotFoundError(self):
+        self.error(404)
+        self.response.out.write("<html><h1>404 Not Found</h1>The resource could not be found.</html>")
+    
+    def findExtension(self,value):
+        components = value.split(".")
+        self.ID = components[0]
+        self.extension = None
+        self.isError = False
+        if len(components) == 2:
+            self.extension = components[1]
+        elif len(components) > 2:
+            self.isError = True
+            return
+
           
     
 class HomePage(Universal):
@@ -115,7 +131,7 @@ class HomePage(Universal):
         self.templateValues = {'title': 'Pinboard'}
         self.basicSetup()
         if self.user:
-            self.setTemplate("form.html")
+            self.setTemplate("home.html")
         else:
             self.setTemplate("login.html")
 #        if self.request.get('imageUrl') != None:
@@ -127,20 +143,39 @@ class HomePage(Universal):
         
 class PinIndex(Universal):    
     def get(self):
-        self.templateValues = {'title': 'My Pins'}
-        self.basicSetup()
+        self.findExtension(self.request.path)
         self.checkLogin()
-        if not self.loggedIn:
-            return
         pins = Pin.all()
-        pins.filter("owner =", self.user.user_id())
-        self.templateValues['pins'] = pins
-        self.templateValues['publicPins']  = self.publicPins()
-        self.setTemplate("pinIndex.html")
+        if self.user:
+            pins.filter("owner =", self.user.user_id())
+        if self.request.get("fmt") == "json" or self.extension == "json":
+            if not self.loggedIn:
+                self.error(401)  
+                return;
+            self.jsonDictionary = []
+            for pin in pins:
+                self.jsonDictionary.append(db.to_dict(pin))
+            self.response.headers["Content-Type"] = "application/json"
+            self.response.out.write(json.dumps(self.jsonDictionary, default=date_handler))
+        else:   
+            if not self.extension == None:
+                self.generateNotFoundError();
+                return
+            self.templateValues = {'title': 'Pins'}
+            self.basicSetup()
+            if not self.loggedIn:
+                self.redirectToHome()
+                return
+            pins = Pin.all()
+            pins.filter("owner =", self.user.user_id())
+            self.templateValues['pins'] = pins
+            self.templateValues['publicPins']  = self.publicPins()
+            self.setTemplate("pinIndex.html")
     
     def post(self):
         self.checkLogin()
         if not self.loggedIn:
+            self.redirectToHome()
             return
         pin = Pin(imgUrl = self.request.get("imageUrl"), caption =  self.request.get("caption"), owner = self.user.user_id())
         pin.setPrivateStatus(self.request.get("private"))
@@ -149,32 +184,51 @@ class PinIndex(Universal):
         return
            
 class PinDetails(Universal):          
-    def get(self, pinID):
-        self.templateValues = {'title': 'My Pin'}
-        self.templateValues['pinID'] = pinID
-        self.basicSetup()
-        self.checkLogin()
-        if not self.loggedIn:
+    def get(self, urlValue):
+        self.findExtension(urlValue)
+        if self.isError:
+            self.generateNotFoundError()
             return
-        self.key = db.Key.from_path('Pin', long(pinID))
+        self.checkLogin()
+        self.key = db.Key.from_path('Pin', long(self.ID))
         self.pin = db.get(self.key)
-        if self.pin == None:
-            self.templateValues['notFound'] = True
-            self.templateValues['title'] = "Error"
-        else:
-            self.templateValues['notFound'] = False
-            self.templateValues['title'] = "Pin " + pinID;
-            self.templateValues['pin'] = self.pin
-            self.templateValues['boards'] = self.pin.getBoards(self.user)
-            if self.pin.owner == self.user.user_id():
-                self.templateValues['isEditable'] = True
+        if self.request.get("fmt") == "json" or self.extension == "json":
+            if not self.loggedIn:
+                self.error(401)  
+                return;
+            self.jsonDictionary = [db.to_dict(self.pin)]
+            self.response.headers["Content-Type"] = "application/json"
+            self.response.out.write(json.dumps(self.jsonDictionary, default=date_handler))
+            return
+        elif self.extension == None:
+            if not self.loggedIn:
+                self.redirectToHome()
+                return
+            self.templateValues = {'title': 'My Pin'}
+            self.templateValues['pinID'] = self.ID
+            self.basicSetup()
+
+            if self.pin == None:
+                self.templateValues['notFound'] = True
+                self.templateValues['title'] = "Error"
             else:
-                self.templateValues['isEditable'] = False
-        self.setTemplate("pinDetails.html")  
+                self.templateValues['notFound'] = False
+                self.templateValues['title'] = "Pin " + self.ID;
+                self.templateValues['pin'] = self.pin
+                self.templateValues['boards'] = self.pin.getBoards(self.user)
+                if self.pin.owner == self.user.user_id():
+                    self.templateValues['isEditable'] = True
+                else:
+                    self.templateValues['isEditable'] = False
+            self.setTemplate("pinDetails.html")  
+        else:
+            self.generateNotFoundError()
+            return
     
     def post(self, pinID):
         self.checkLogin()
         if not self.loggedIn:
+            self.redirectToHome()
             return
         self.key = db.Key.from_path('Pin', long(pinID))
         self.pin = db.get(self.key)
@@ -206,10 +260,11 @@ class PinDetails(Universal):
         
 class BoardIndex(Universal):
     def get(self):
-        self.templateValues = {'title': 'My Boards'}
+        self.templateValues = {'title': 'Boards'}
         self.basicSetup()
         self.checkLogin()
         if not self.loggedIn:
+            self.redirectToHome()
             return
         boards = Board.all()
         boards.filter("owner =", self.user.user_id())
@@ -227,17 +282,61 @@ class BoardIndex(Universal):
     
            
 class BoardDetails(Universal):          
-    def get(self, boardID):
-        self.templateValues = {'title': 'Board'}
-        self.templateValues['boardID'] = boardID
-        self.basicSetup()
-        self.defineUser()
-        self.loggedIn = True
-        if not self.user:
-            self.loggedIn = False
-        self.key = db.Key.from_path('Board', long(boardID))
+    def get(self, urlValue):
+        self.findExtension(urlValue)
+        if self.isError:
+            self.generateNotFoundError()
+            return
+        self.checkLogin()
+        self.key = db.Key.from_path('Board', long(self.ID))
         self.board = db.get(self.key)
-        if self.loggedIn or not self.board.private:
+        if self.request.get("fmt") == "json" or self.extension == "json":
+            if not self.loggedIn and self.board.private:
+                self.error(401)  
+                return;
+            self.jsonDictionary = db.to_dict(self.board)
+            self.jsonDictionary['pins'] = [];
+            self.boardPinArray = []
+            for pin in self.board.getPins():
+                    pinDict = db.to_dict(pin)
+                    pinDict["id"] = pin.key().id()
+                    self.boardPinArray.append(pinDict)
+            self.jsonDictionary['pins'] = self.boardPinArray
+            self.allPins = [];
+            if self.user:
+                for pin in Pin.all().filter("owner =", self.user.user_id()):
+                    try:
+                        pinDict = db.to_dict(pin)
+                        pinDict["id"] = pin.key().id()
+                        self.boardPinArray.index(pinDict)
+                    except Exception:
+                        pinDict = db.to_dict(pin)
+                        pinDict["id"] = pin.key().id()
+                        self.allPins.append(pinDict)
+                    
+                for pin in self.publicPins():
+                    try:
+                        pinDict = db.to_dict(pin)
+                        pinDict["id"] = pin.key().id()
+                        self.boardPinArray.index(pinDict)
+                    except Exception:
+                        pinDict = db.to_dict(pin)
+                        pinDict["id"] = pin.key().id()
+                        self.allPins.append(pinDict)
+                    
+            self.jsonDictionary['publicPins'] = self.allPins;
+
+            self.response.headers["Content-Type"] = "application/json"
+            self.response.out.write(json.dumps(self.jsonDictionary, default=date_handler))
+            return
+        elif self.extension == None:
+            if not self.loggedIn and self.board.private:
+                self.redirectToHome()
+                return
+            
+            self.templateValues = {'title': 'Board'}
+            self.templateValues['boardID'] = self.ID
+            self.basicSetup()
             if self.board == None:
                 self.templateValues['notFound'] = True
                 self.templateValues['title'] = "Error"
@@ -255,38 +354,53 @@ class BoardDetails(Universal):
                     pins = Pin.all();
                     pins.filter("owner =", self.user.user_id())
                     self.templateValues['userPins'] = pins
-        else:
-            self.redirect("/")
-            return
-                
+            self.setTemplate("boardDetails.html")  
 
-        self.setTemplate("boardDetails.html")  
-    
+        else:
+            self.generateNotFoundError()
+            return
+        
+        
     def post(self, boardID):
         self.defineUser()
         self.key = db.Key.from_path('Board', long(boardID))
         self.board = db.get(self.key)
         if self.board.owner !=  self.user.user_id():
-            self.redirect("/board")
+            self.error(401)
+            self.response.out.write("<html><h1>401 Invalid Rights</h1>You do not have the rights to access this data</html>")
             return
         if self.request.get("method") == "Delete":
             db.delete(self.key)
             self.redirect("/board")
             return
-        elif self.request.get("method") == "Add":
-            pins = self.request.get_all("pins")
-            for pinID in pins:
-                key = db.Key.from_path('Pin', long(pinID))
-                self.board.pins.append(key);
+        elif self.request.get("method") == "AddPin":
+            key = db.Key.from_path('Pin', long(self.request.get("pinID")))
+            self.board.pins.append(key);
             self.board.put()
-            self.redirect("/board/"+str(self.board.key().id()))
+            self.error(200)
+            self.response.out.write("Success")
+#            self.redirect("/board/"+str(self.board.key().id()))
             return
         elif self.request.get("method") == "RemovePin":
             key = db.Key.from_path('Pin', long(self.request.get("pinID")))
             self.board.pins.remove(key)
             self.board.put();
-            self.redirect("/board/"+str(self.board.key().id()))
+            self.error(200)
+            self.response.out.write("Success")
+            #self.redirect("/board/"+str(self.board.key().id()))
             return
+        elif self.request.get("method") == "saveName":
+            self.board.name = self.request.get("name");
+            self.board.put()
+            self.error(200)
+            self.response.out.write(self.board.name)
+            return;
+        elif self.request.get("method") == "privateChanged":
+            self.board.setPrivateStatus(self.request.get("private"))
+            self.board.put()
+            self.error(200)
+            self.response.out.write(self.board.private)
+            return;
         else:
             self.board.name = self.request.get("name")
             self.board.setPrivateStatus(self.request.get("private"))
@@ -295,5 +409,6 @@ class BoardDetails(Universal):
             return
                 
 app = webapp2.WSGIApplication([('/', HomePage),
-                               ('/pin', PinIndex),('/pin/(.*)', PinDetails),('/board', BoardIndex),('/board/(.*)', BoardDetails)],  #\d+)
+                             ('/pin.json', PinIndex),('/pin', PinIndex),('/pin/(.*)', PinDetails), 
+                             ('/board', BoardIndex),('/board/(.*)', BoardDetails)], 
                               debug=True)

@@ -6,14 +6,44 @@
 {% endblock %}
 
 {% block content %}
+<div style="position:relative;">
+   <div style="width:25%;">
+	<div id="widgetBox" style="width:100%; min-width:0px;">
+	<div class="widgetTitleBox">
+	<div class="widgetTitle">Create New Board:</div>
+	</div>	
+		<div class="widgetContentBox">
+			<div class="widgetContent">
+					    	
+	    		<form action="/board" method="POST">
+	         	<div><label for="name">Name: </label><input name="name" type="text" style="width:100%;"></input></div> 
+	       		<div><label for="private">Private: </label>
+		       		<select name="private" style="width:50%;">
+			       		<option value="1">Private</option>
+			       		<option value="0">Public</option>	   
+		       		</select>
+	       		</div>	    
+	       		<div><input type="submit" value="Create" style="width:50%;" class="fancyButton submitButton"></div>
+	   			</form>
+			</div>
+		</div>
+		
+	 </div>
+   </div>
+	<div style="width:70%; position:absolute; top:0px; right:0px; padding-bottom:100px;">
+	<h1 style="margin-top: 0px;">My Boards</h1>
 	{% if boards.count()==0 %}
+	 <div style="margin-left:auto; margin-right:auto; width:75%; text-align:center;">
 		<h2>You have no boards</h2>
+	 </div>
 	{% else %}
+		<div style="margin-left:auto; margin-right:auto; width:75%; text-align:center;">
 	    {% for board in boards %}
-			 <a href="/board/{{ board.key().id() }}">
+			 <a style="font-size:35px;" href="/board/{{ board.key().id() }}">
 				{{ board.name }}
 			  </a><br/>
 		{% endfor %} 
+	    </div>
 	{% endif %}
 	<h1>Public Boards</h1>
 		 {% for board in publicBoards %}
@@ -21,5 +51,6 @@
 				{{ board.name }}
 			  </a><br/>
 		{% endfor %} 
-	
+	</div>
+  </div>
 {% endblock %}

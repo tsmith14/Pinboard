@@ -4,8 +4,37 @@
 <li><a href="/">Return Home</a></li>	
 </ul>		
 {% endblock %}
-
+	
 {% block content %}
+<div style="position:relative;">
+   <div style="width:25%;">
+	 <div id="widgetBox" style="width:100%; min-width:0px;"">
+			<div class="widgetTitleBox">
+			<div class="widgetTitle">Create New Pin:</div>
+			</div>
+			
+			<div class="widgetContentBox">
+				<div class="widgetContent">
+			    	
+		    		<form action="/pin" method="POST">
+		         	<div><label for="imageUrl">Image URL: </label><input name="imageUrl" type="text" style="width:100%;"></input></div> 
+		       		<div><label for="caption">Caption: </label><input name="caption" type="text" style="width:100%;"></input></div>
+		       		<div><label for="private">Private: </label>
+			       		<select name="private" style="width:50%;">
+				       		<option value="1">Private</option>
+				       		<option value="0">Public</option>	   
+			       		</select>
+		       		</div>	    
+		       		<div><input type="submit" value="Create" style="width:50%;" class="fancyButton submitButton"></div>
+		   			</form>
+				</div>
+			</div>
+	 </div>
+   </div>
+
+  
+  <div style="width:70%; position:absolute; top:0px; right:0px; padding-bottom:100px;">
+	<h1 style="margin-top: 0px;">My Pins</h1>
 	{% if pins.count()==0 %}
 		<h2>You have no pins</h2>
 	{% else %}
@@ -38,5 +67,6 @@
 			  </a>
 			</div>
 		{% endfor %} 
-		
+	 </div>
+  </div>	
 {% endblock %}

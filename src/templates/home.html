@@ -1,0 +1,18 @@
+{% extends "master.html" %}
+{% block content %}
+   
+   <a href= "/pin" style="font-size:24px;" class="">My Pins</a><br/>
+   
+   <a href= "/board" style="font-size:24px;" class="">My Boards</a>
+	
+	 
+		<div style="padding-top:15px;" id="bookmarklet">
+			Pin with ease with this bookmarklet: <a  value="Pin It" href="javascript:(function(){
+			_s = document.createElement('script');
+			_s.src = 'http://tsmith14-pinboard.appspot.com/js/bookmarklet.js';
+			document.getElementsByTagName('head')[0] = null;
+			document.getElementsByTagName('head')[0].appendChild(_s);}())" style= "color: #27C239;">Pin It!</a>
+		</div>
+
+   
+{% endblock %}

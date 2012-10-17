@@ -6,28 +6,29 @@
 {% endblock %}
 
 {% block content %}
+	<script id="ajaxScript" type="text/javascript" src="/js/boardDetail.js" data-editable="{{ isEditable }}" data-url="/board/{{ boardID }}"></script>	
 	{% if notFound %}
 		<h2>No Board Found</h2>
 	{% else %}
 	<div style="position:relative">
-	  <div class="editBox" style="width:30%; height:auto;">
+	  <div class="editBox" style="width:25%; height:auto;">
 	  {% if isEditable %}
 		<div class="editTitleBox">
 			<div style="text-align:center;" class="editTitle">Edit:</div>
 		</div>
 		<div class="editContentBox">
-			<form action="/board/{{ boardID }}" method="POST">
-	         	<div><label for="name">Name: </label><input name="name" type="text" value="{{ board.name }}" style="width:90%;"></input></div> 
+<!-- 			<form action="/board/{{ boardID }}" method="POST"> -->	         	
+               <!-- <div><label for="name">Name: </label><input id="nameBox" name="name" type="text" value="{{ board.name }}" style="width:90%;"></input></div>  -->
 	       		<div><label for="private">Status: </label>
-		       		<select name="private">
+		       		<select id="private" name="private">
 			       		<option value="1">Private</option>
 			       		<option value="0" {% if not board.private %} selected {% endif %}>Public</option>	   
 		       		</select>
 	       		</div>	    
-	       		<input name="method" type="hidden" value="Update"></input>
-	       		<div><input type="submit" value="Submit" class="fancyButton submitButton"></div>
+	       		<!-- <input name="method" type="hidden" value="Update"></input>
+	       		<div><input type="submit" value="Submit" class="fancyButton submitButton"></div> -->
 	   		</form>
-	   		<hr/>
+<!-- 	   		<hr/>
 	   		<form action="/board/{{ boardID }}" method="POST">
 	   			<div><label for="private">Add Pins: </label>
 		       		<select name="pins" style="min-width:40%; max-width:100%;" multiple="true">
@@ -40,7 +41,7 @@
 	       		</div>	    
 	       		<input name="method" type="hidden" value="Add"></input>
 	       		<div><input type="submit" value="Submit" class="fancyButton submitButton"></div>
-	   		</form>
+	   		</form> -->
 	   		<hr/>
 	   		<form action="/board/{{ boardID }}" method="POST" style="position:relative;">
 	       		<input name="method" type="hidden" value="Delete"></input>
@@ -56,9 +57,36 @@
 
 
 	   </div>
-		<div style="width:70%; position:absolute; right:0px; top:0px; height:auto; 	padding-bottom: 150px;
+	   	<div id="allPins" style="width:72%; position:absolute; right:0px; top:0px; height:auto; 	padding-bottom: 150px;
 	margin-bottom:50px;">
-		{% for pin in board.getPins() %}
+	
+			<div id="placeholder" style="margin: 0 auto; width:75%; font-size:30px; text-align:center;"> 
+				There are no pins on this board!
+			</div>
+		 <div id="boardPins" style="width:100%; min-height:50px; overflow: hidden; height: 1%; border-bottom:3px solid #999;">
+		</div>
+		
+		 <div id="otherPins" style="width:100%; margin-top:25px; overflow: hidden; height: 1%;">
+		</div>
+		
+		<div id="frames">
+			<div id="pinFrame" style="display:none; float:left; margin: 0 0 20px 20px; text-align:center; width:45%; background-color:#cfcfcf; border: solid #24687F 3px">
+				<div><img src="" style="min-width:100px; max-width:100%;"></div>
+				<div class="pin-thumbnail-captionBox">
+					<div class="pin-thumbnail-caption pinCaption"></div>
+					<div class="fancyButton deleteButton removeButton">Remove</div>
+					</div>
+			</div>
+			<div id="smallPinFrame" style="display:none; float:left; margin: 0 0 20px 20px; text-align:center; width:20%; background-color:#cfcfcf; border: solid #24687F 3px">
+				<div><img src="" style="min-width:75px; max-width:100%;"></div>
+				<div class="pin-thumbnail-captionBox">
+					<div class="pin-thumbnail-caption pinCaption"></div>
+					<div class="fancyButton submitButton addButton">Add</div>
+					</div>
+			</div>
+		 </div>
+		</div>
+<!-- 		{% for pin in board.getPins() %}
 			<div class="pinBox-thumbnail">
 				<div class="pin-thumbnail-imageContainer">
 					<img class="pin-thumbnail-image" src="{{ pin.imgUrl }}">
@@ -68,6 +96,7 @@
 					<div class="pin-thumbnail-date">{{ pin.date|datetimeformat}}</div>
 				</div>
 			    {% if isEditable %}
+			    <script id="ajaxScript" type="text/javascript" src="/js/pinAjax.js" data-url="/board/{{ boardID }}"></script>	
 				<div class="pin-thumbnail-deleteButton">
 					<form action="/board/{{ boardID }}" method="POST">
 						<input name="pinID" type="hidden" value="{{ pin.key().id() }}"></input>
@@ -77,8 +106,7 @@
 				</div>
 				{% endif %}
 			</div>
-		{% endfor%}
-		</div>
+		{% endfor%} -->
 	</div>
 
 	{% endif %}
