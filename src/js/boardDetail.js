@@ -1,7 +1,8 @@
 // BoardDetail.js -- Tyler Smith -- 10/16/12
 
-var boardPins;
-var otherPins;
+//var boardPins;
+//var otherPins;
+var pins = new Array();
 
 var script_tag = document.getElementById('ajaxScript');
 var url = script_tag.getAttribute("data-url");
@@ -9,46 +10,54 @@ var isEditable = (script_tag.getAttribute("data-editable")=="True")?true:false;
 
 function updateView(data)
 {
-	if (data['pins'].length>0)
-		$("#placeholder").hide();
-	else
-		$("#placeholder").show();
-	boardPins = data['pins'];
+	var count = 0; 
+	//boardPins = data['pins'];
 	$.each(data['pins'],function(index, pin){
-		createBoardPin(index,pin);
+		pin["boardPin"] = true;
+		pins.push(pin);
+		createBoardPin(count,pin);
+		count++;
 	});
 	if (isEditable)
 	{
-		otherPins = data['publicPins'];
+		//otherPins = data['publicPins'];
 		$.each(data['publicPins'],function(index, pin){
-			createOtherPin(index,pin)
+			pin["boardPin"] = false;
+			pins.push(pin);
+			createOtherPin(count,pin);
+			count++;
 		});
 	}
+	displayMessage();
 
-
-	
 }
 
 function createBoardPin(index,pin)
 {
+	console.log(pin);
 	var pinFrame = $("#pinFrame").clone();
-	pinFrame.attr("id","boardPin"+index);
+	pinFrame.attr("data-identifier", index);
+	pinFrame.addClass("boardPin");
 	pinFrame.css("display","inline");
 	pinFrame.find("img").attr("src",pin["imgUrl"]);
 	pinFrame.find(".pinCaption").text(pin["caption"]);
 	if (!isEditable)
 		pinFrame.find(".removeButton").remove();
 	pinFrame.hide().appendTo("#boardPins").show();
+	return pinFrame;
 }
 
 function createOtherPin(index,pin)
 {
+	console.log(pin);
 	var pinFrame = $("#smallPinFrame").clone();
-	pinFrame.attr("id","publicPin"+index);
+	pinFrame.attr("data-identifier", index);
+	pinFrame.addClass("otherPin");
 	pinFrame.css("display","inline");
 	pinFrame.find("img").attr("src",pin["imgUrl"]);
 	pinFrame.find(".pinCaption").text(pin["caption"]);
 	pinFrame.hide().appendTo("#otherPins").show();	
+	return pinFrame;
 }
 
 function getContent()
@@ -70,75 +79,65 @@ function getContent()
 	});
 }
 
-function addPin()
+function changePin(method,button) 
 {
-	console.log($(this).parent().parent()[0]);
-	$parentDiv = $(this).parent().parent();
+	var type = (method == "Add")?true:false;
+	$parentDiv = $(button).parent().parent();
+	console.log($parentDiv);
+	$id = parseInt($parentDiv.attr("data-identifier"));
 	$parentDiv.remove();
-	$id = parseInt($parentDiv.attr("id").substring(9));
 	console.log($id);
-	console.log(otherPins[$id]);
-	createBoardPin($id,otherPins[$id]);
+	var pinFrame;
+	if (type)
+		pinFrame = createBoardPin($id,pins[$id]);
+	else
+		pinFrame = createOtherPin($id,pins[$id]);
+
+	pins[$id]["boardPin"] = !pins[$id]["boardPin"];
 	$.ajax(url,
 	{
 		type:"POST",
-		data: {
-			"method":"AddPin",
-			"pinID":otherPins[$id]["id"]
+		data: 
+		{
+			"method":(type)?"AddPin":"RemovePin",
+			"pinID":pins[$id]["id"]//otherPins[$id]["id"]
 		},
 		success: function(data)
 		{
-			clearView();
-			getContent();
+			displayMessage();
 			console.log("Data saved");
-			
 		},
 		error: function(error)
 		{
+			pins[$id]["boardPin"] = !pins[$id]["boardPin"];
+			pinFrame.remove();
+			if (!type)
+				pinFrame = createBoardPin($id,pins[$id]);
+			else
+				pinFrame = createOtherPin($id,pins[$id]);
 			console.log(error);
 			alert("An error occurred adding the pin: " + error["status"] + " error");
-			clearView();
-			getContent();
 		}
-		
+				
 	});
+}
+
+function addPin()
+{
+	changePin("Add",this);
 }
 
 function removePin()
 {
-	$parentDiv = $(this).parent().parent();
-	$parentDiv.remove();
-	$id = parseInt($parentDiv.attr("id").substring(8));
-	createOtherPin($id,boardPins[$id]);
-	$.ajax(url,
-	{
-		type:"POST",
-		data: {
-			"method":"RemovePin",
-			"pinID":boardPins[$id]["id"]
-		},
-		success: function(data)
-		{
-			clearView();
-			getContent();
-			console.log("Data saved");
-		},
-		error: function(error)
-		{
-			alert("An error occurred removing the pin: " + error);
-			clearView();
-			getContent();
-		}
-		
-	});
+	changePin("Remove",this);
 }
 
-function clearView()
+function displayMessage()
 {
-	boardPins = new Array();
-	otherPins = new Array();
-	$("#boardPins").html("");
-	$("#otherPins").html("");
+	if ($("#boardPins").find("div").size()>0)
+		$("#placeholder").hide();
+	else
+		$("#placeholder").show();
 }
 
 function createNameEditBox()
