@@ -53,6 +53,7 @@ class Board(db.Model):
         name = db.StringProperty()
         private = db.BooleanProperty()
         pins = db.ListProperty(db.Key)
+        locations = db.StringListProperty()
         date = db.DateTimeProperty(auto_now_add=True)
         owner = db.StringProperty()
         
@@ -70,6 +71,43 @@ class Board(db.Model):
                 return True
             else:
                 return False
+        
+        def addLocation(self,pinID,x,y):
+            locationArray = {"id":long(pinID),"x": long(x),"y":long(y)}
+            self.locations.append(json.dumps(locationArray))
+            self.put()
+            
+            
+        def removeLocation(self,pinID):
+            for location in self.locations:
+                locationArray = json.loads(location)
+                if long(locationArray['id']) == pinID:
+                    self.locations.remove(location)
+                    self.put()
+                    return  
+       
+        def getPinXLocation(self,pinID):   
+            for location in self.locations:
+                locationArray = json.loads(location)
+                if long(locationArray['id']) == pinID:
+                    return locationArray['x'];
+            return 0;   
+        
+        def getPinYLocation(self,pinID):   
+            for location in self.locations:
+                locationArray = json.loads(location)
+                if long(locationArray['id']) == pinID:
+                    return locationArray['y'];
+            return 0;    
+        
+        def updatePinLocation(self,pinID,x,y):
+            for location in self.locations:
+                locationArray = json.loads(location)
+                if long(locationArray['id']) == long(pinID):
+                    logging.info("HERE2")
+                    self.locations.remove(location)
+                    self.locations.append(json.dumps({"id":pinID,"x":x,"y":y}))                   
+                    return
         
 class Universal(webapp2.RequestHandler):
     def defineUser(self):
@@ -300,6 +338,8 @@ class BoardDetails(Universal):
             for pin in self.board.getPins():
                     pinDict = db.to_dict(pin)
                     pinDict["id"] = pin.key().id()
+                    pinDict["x"] = self.board.getPinXLocation(pin.key().id())
+                    pinDict["y"] = self.board.getPinYLocation(pin.key().id())
                     self.boardPinArray.append(pinDict)
             self.jsonDictionary['pins'] = self.boardPinArray
             self.allPins = [];
@@ -308,20 +348,28 @@ class BoardDetails(Universal):
                     try:
                         pinDict = db.to_dict(pin)
                         pinDict["id"] = pin.key().id()
+                        pinDict["x"] = self.board.getPinXLocation(pin.key().id())
+                        pinDict["y"] = self.board.getPinYLocation(pin.key().id())
                         self.boardPinArray.index(pinDict)
                     except Exception:
                         pinDict = db.to_dict(pin)
                         pinDict["id"] = pin.key().id()
+                        pinDict["x"] = self.board.getPinXLocation(pin.key().id())
+                        pinDict["y"] = self.board.getPinYLocation(pin.key().id())
                         self.allPins.append(pinDict)
                     
                 for pin in self.publicPins():
                     try:
                         pinDict = db.to_dict(pin)
                         pinDict["id"] = pin.key().id()
+                        pinDict["x"] = self.board.getPinXLocation(pin.key().id())
+                        pinDict["y"] = self.board.getPinYLocation(pin.key().id())
                         self.boardPinArray.index(pinDict)
                     except Exception:
                         pinDict = db.to_dict(pin)
                         pinDict["id"] = pin.key().id()
+                        pinDict["x"] = self.board.getPinXLocation(pin.key().id())
+                        pinDict["y"] = self.board.getPinYLocation(pin.key().id())
                         self.allPins.append(pinDict)
                     
             self.jsonDictionary['publicPins'] = self.allPins;
@@ -376,6 +424,7 @@ class BoardDetails(Universal):
         elif self.request.get("method") == "AddPin":
             key = db.Key.from_path('Pin', long(self.request.get("pinID")))
             self.board.pins.append(key);
+            self.board.addLocation(long(self.request.get("pinID")),0,0)
             self.board.put()
             self.error(200)
             self.response.out.write("Success")
@@ -384,6 +433,7 @@ class BoardDetails(Universal):
         elif self.request.get("method") == "RemovePin":
             key = db.Key.from_path('Pin', long(self.request.get("pinID")))
             self.board.pins.remove(key)
+            self.board.removeLocation(long(self.request.get("pinID")))
             self.board.put();
             self.error(200)
             self.response.out.write("Success")
@@ -401,14 +451,52 @@ class BoardDetails(Universal):
             self.error(200)
             self.response.out.write(self.board.private)
             return;
+        elif self.request.get("method") == "UpdatePinLocation":
+            self.board.updatePinLocation(self.request.get("pinID"),self.request.get("x"),self.request.get("y"))
+            self.board.put()
+            self.error(200)
+            self.response.out.write(json.dumps(self.board.locations))
+            return;
         else:
             self.board.name = self.request.get("name")
             self.board.setPrivateStatus(self.request.get("private"))
             self.board.put()
             self.redirect("/board/"+str(self.board.key().id()))
             return
-                
+        
+class BoardCanvasDetails(Universal):          
+    def get(self, urlValue):
+        self.checkLogin()
+        self.key = db.Key.from_path('Board', long(urlValue))
+        self.board = db.get(self.key)
+        if not self.loggedIn and self.board.private:
+                self.redirectToHome()
+                return
+            
+        self.templateValues = {'title': 'Board'}
+        self.templateValues['boardID'] = urlValue
+        self.basicSetup()
+        if self.board == None:
+            self.templateValues['notFound'] = True
+            self.templateValues['title'] = "Error"
+        else:
+            self.templateValues['notFound'] = False
+            self.templateValues['title'] = self.board.name;
+            self.templateValues['board'] = self.board
+            if not self.loggedIn:
+                self.templateValues['isEditable'] = False
+            else:
+                if self.board.owner == self.user.user_id():
+                    self.templateValues['isEditable'] = True
+                else:
+                    self.templateValues['isEditable'] = False
+                pins = Pin.all();
+                pins.filter("owner =", self.user.user_id())
+                self.templateValues['userPins'] = pins
+        self.setTemplate("boardCanvasDetails.html")  
+            
 app = webapp2.WSGIApplication([('/', HomePage),
                              ('/pin.json', PinIndex),('/pin', PinIndex),('/pin/(.*)', PinDetails), 
-                             ('/board', BoardIndex),('/board/(.*)', BoardDetails)], 
-                              debug=True)
+                             ('/board', BoardIndex),('/board/(.*)', BoardDetails),
+                             ('/canvas/(.*)',BoardCanvasDetails)],
+                             debug=True)

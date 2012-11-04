@@ -1,0 +1,21 @@
+{% extends "master.html" %}
+{% block navContent %}
+<ul style="" class="navigation-items">
+<li><a href="/board">Return to My Boards</a></li>	
+</ul>		
+{% endblock %}
+
+{% block content %}
+	<script id="ajaxScript" type="text/javascript" src="/js/boardCanvasDetail.js" data-editable="{{ isEditable }}" data-url="/board/{{ boardID }}"></script>	
+	{% if notFound %}
+		<h2>No Board Found</h2>
+	{% else %}
+	<div style="float: center;text-align: center;background-color: #AAA;border-radius: 30px;">
+		<canvas id="boardCanvas" width="854" height="480" style="margin: 10px auto;  background-color: white; border:3px solid lightgray;">
+ 			Sorry, your browser doesn't support the &lt;canvas&gt; element.
+		</canvas>	 
+	</div>
+
+	{% endif %}
+	
+{% endblock %}
