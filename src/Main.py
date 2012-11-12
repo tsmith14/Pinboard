@@ -56,7 +56,7 @@ class Pin(db.Model):
                     board.put()
                     
         def toArray(self):
-            return {"id":self.key().id(),"date":self.date.strftime("%B"),"imgUrl":self.imgUrl,"imageWidth":self.imageWidth,"imageHeight":self.imageHeight,"private":self.private,"owner":self.owner,"caption":self.caption}
+            return {"id":self.key().id(),"date":self.date.strftime("%Y-%m-%d %I:%M:%s"),"imgUrl":self.imgUrl,"imageWidth":self.imageWidth,"imageHeight":self.imageHeight,"private":self.private,"owner":self.owner,"caption":self.caption}
         
         
         
@@ -122,7 +122,7 @@ class Board(db.Model):
                     return
         
         def toArray(self):
-            return {"id":self.key().id(),"date":self.date.strftime("%B"),"name":self.name,"private":self.private,"owner":self.owner}
+            return {"id":self.key().id(),"date":self.date.strftime("%Y-%m-%d %I:%M:%s"),"name":self.name,"private":self.private,"owner":self.owner}
         
 class Universal(webapp2.RequestHandler):
     def defineUser(self):
