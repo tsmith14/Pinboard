@@ -10,6 +10,8 @@ import json
 import logging
 from google.appengine.ext import db
 from google.appengine.api import users
+from google.appengine.api import urlfetch
+from google.appengine.api import images
 
 jinja_environment = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__) + "/templates"))
@@ -17,13 +19,13 @@ jinja_environment = jinja2.Environment(
 def datetimeformat(value, datetimeformat='%B, %d %I:%M%p'):
     return value.strftime(datetimeformat)
 
-def date_handler(obj):
-    return obj.isoformat() if hasattr(obj, 'isoformat') else obj
-
 jinja_environment.filters['datetimeformat'] = datetimeformat
 
 
 class Pin(db.Model):
+        image = db.BlobProperty(default=None)
+        imageWidth = db.IntegerProperty()
+        imageHeight = db.IntegerProperty()
         imgUrl = db.StringProperty()
         caption = db.StringProperty(multiline=True)
         date = db.DateTimeProperty(auto_now_add=True)
@@ -36,6 +38,10 @@ class Pin(db.Model):
             else:
                 self.private = True
         
+        def imageURL(self):
+            self.request.host_url
+            return self.request.host_url+"pin/"+str(self.key().id())+".jpg"
+                  
         def getBoards(self,user):
             if (self.owner == user.user_id()):
                 return Board.gql("WHERE pins = :1 AND owner = :2 ", self.key(),user.user_id())
@@ -48,6 +54,12 @@ class Pin(db.Model):
                 if board.hasPin(self.key()):
                     board.pins.remove(self.key())
                     board.put()
+                    
+        def toArray(self):
+            return {"id":self.key().id(),"date":self.date.strftime("%B"),"imgUrl":self.imgUrl,"imageWidth":self.imageWidth,"imageHeight":self.imageHeight,"private":self.private,"owner":self.owner,"caption":self.caption}
+        
+        
+        
 
 class Board(db.Model):
         name = db.StringProperty()
@@ -108,6 +120,9 @@ class Board(db.Model):
                     self.locations.remove(location)
                     self.locations.append(json.dumps({"id":pinID,"x":x,"y":y}))                   
                     return
+        
+        def toArray(self):
+            return {"id":self.key().id(),"date":self.date.strftime("%B"),"name":self.name,"private":self.private,"owner":self.owner}
         
 class Universal(webapp2.RequestHandler):
     def defineUser(self):
@@ -192,9 +207,9 @@ class PinIndex(Universal):
                 return;
             self.jsonDictionary = []
             for pin in pins:
-                self.jsonDictionary.append(db.to_dict(pin))
+                self.jsonDictionary.append(pin.toArray())
             self.response.headers["Content-Type"] = "application/json"
-            self.response.out.write(json.dumps(self.jsonDictionary, default=date_handler))
+            self.response.out.write(json.dumps(self.jsonDictionary))
         else:   
             if not self.extension == None:
                 self.generateNotFoundError();
@@ -215,9 +230,15 @@ class PinIndex(Universal):
         if not self.loggedIn:
             self.redirectToHome()
             return
-        pin = Pin(imgUrl = self.request.get("imageUrl"), caption =  self.request.get("caption"), owner = self.user.user_id())
+        pictureData = images.Image(image_data=urlfetch.Fetch(self.request.get("imageUrl")).content);
+        pin = Pin(image = db.Blob(urlfetch.Fetch(self.request.get("imageUrl")).content), caption =  self.request.get("caption"), owner = self.user.user_id())
+        pin.imageWidth = pictureData.width
+        pin.imageHeight = pictureData.height
         pin.setPrivateStatus(self.request.get("private"))
         pin.put()
+        pin.imgUrl = self.request.host_url+"/pin/"+str(pin.key().id())+".jpg"
+        pin.put()
+
         self.redirect("/pin/"+str(pin.key().id()))
         return
            
@@ -234,9 +255,16 @@ class PinDetails(Universal):
             if not self.loggedIn:
                 self.error(401)  
                 return;
-            self.jsonDictionary = [db.to_dict(self.pin)]
             self.response.headers["Content-Type"] = "application/json"
-            self.response.out.write(json.dumps(self.jsonDictionary, default=date_handler))
+            self.response.out.write(json.dumps(self.pin.toArray()))
+            return
+        elif self.extension == "jpg":
+            if self.pin.owner !=  self.user.user_id():
+                self.response.out.write("Sorry, you do not have rights to edit this pin");
+                return
+            else:
+                self.response.headers['Content-Type'] = 'image/jpeg'
+                self.response.out.write(self.pin.image)
             return
         elif self.extension == None:
             if not self.loggedIn:
@@ -294,8 +322,7 @@ class PinDetails(Universal):
         else:
             self.response.out.write("ERROR")
             return
-
-        
+            
 class BoardIndex(Universal):
     def get(self):
         self.templateValues = {'title': 'Boards'}
@@ -332,12 +359,11 @@ class BoardDetails(Universal):
             if not self.loggedIn and self.board.private:
                 self.error(401)  
                 return;
-            self.jsonDictionary = db.to_dict(self.board)
+            self.jsonDictionary = self.board.toArray()
             self.jsonDictionary['pins'] = [];
             self.boardPinArray = []
             for pin in self.board.getPins():
-                    pinDict = db.to_dict(pin)
-                    pinDict["id"] = pin.key().id()
+                    pinDict = pin.toArray()
                     pinDict["x"] = self.board.getPinXLocation(pin.key().id())
                     pinDict["y"] = self.board.getPinYLocation(pin.key().id())
                     self.boardPinArray.append(pinDict)
@@ -346,28 +372,24 @@ class BoardDetails(Universal):
             if self.user:
                 for pin in Pin.all().filter("owner =", self.user.user_id()):
                     try:
-                        pinDict = db.to_dict(pin)
-                        pinDict["id"] = pin.key().id()
+                        pinDict = pin.toArray()
                         pinDict["x"] = self.board.getPinXLocation(pin.key().id())
                         pinDict["y"] = self.board.getPinYLocation(pin.key().id())
                         self.boardPinArray.index(pinDict)
                     except Exception:
-                        pinDict = db.to_dict(pin)
-                        pinDict["id"] = pin.key().id()
+                        pinDict = pin.toArray()
                         pinDict["x"] = self.board.getPinXLocation(pin.key().id())
                         pinDict["y"] = self.board.getPinYLocation(pin.key().id())
                         self.allPins.append(pinDict)
                     
                 for pin in self.publicPins():
                     try:
-                        pinDict = db.to_dict(pin)
-                        pinDict["id"] = pin.key().id()
+                        pinDict = pin.toArray()
                         pinDict["x"] = self.board.getPinXLocation(pin.key().id())
                         pinDict["y"] = self.board.getPinYLocation(pin.key().id())
                         self.boardPinArray.index(pinDict)
                     except Exception:
-                        pinDict = db.to_dict(pin)
-                        pinDict["id"] = pin.key().id()
+                        pinDict = pin.toArray()
                         pinDict["x"] = self.board.getPinXLocation(pin.key().id())
                         pinDict["y"] = self.board.getPinYLocation(pin.key().id())
                         self.allPins.append(pinDict)
@@ -375,7 +397,7 @@ class BoardDetails(Universal):
             self.jsonDictionary['publicPins'] = self.allPins;
 
             self.response.headers["Content-Type"] = "application/json"
-            self.response.out.write(json.dumps(self.jsonDictionary, default=date_handler))
+            self.response.out.write(json.dumps(self.jsonDictionary))
             return
         elif self.extension == None:
             if not self.loggedIn and self.board.private:
