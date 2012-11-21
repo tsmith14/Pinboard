@@ -84,8 +84,8 @@ class Board(db.Model):
             else:
                 return False
         
-        def addLocation(self,pinID,x,y):
-            locationArray = {"id":long(pinID),"x": long(x),"y":long(y)}
+        def addLocation(self,pinID,x,y, width, height):
+            locationArray = {"id":long(pinID),"x": long(x),"y":long(y),"width":long(width),"height":long(height)}
             self.locations.append(json.dumps(locationArray))
             self.put()
             
@@ -112,13 +112,27 @@ class Board(db.Model):
                     return locationArray['y'];
             return 0;    
         
-        def updatePinLocation(self,pinID,x,y):
+        def getPinWidth(self,pinID):   
+            for location in self.locations:
+                locationArray = json.loads(location)
+                if long(locationArray['id']) == pinID:
+                    return locationArray['width'];
+            return 0;  
+        
+        def getPinHeight(self,pinID):   
+            for location in self.locations:
+                locationArray = json.loads(location)
+                if long(locationArray['id']) == pinID:
+                    return locationArray['height'];
+            return 0;    
+        
+        def updatePinLocation(self,pinID,x,y,width,height):
             for location in self.locations:
                 locationArray = json.loads(location)
                 if long(locationArray['id']) == long(pinID):
                     logging.info("HERE2")
                     self.locations.remove(location)
-                    self.locations.append(json.dumps({"id":pinID,"x":x,"y":y}))                   
+                    self.locations.append(json.dumps({"id":pinID,"x":x,"y":y,"width":width,"height":height}))                   
                     return
         
         def toArray(self):
@@ -366,6 +380,8 @@ class BoardDetails(Universal):
                     pinDict = pin.toArray()
                     pinDict["x"] = self.board.getPinXLocation(pin.key().id())
                     pinDict["y"] = self.board.getPinYLocation(pin.key().id())
+                    pinDict["width"] = self.board.getPinWidth(pin.key().id())
+                    pinDict["height"] = self.board.getPinHeight(pin.key().id())
                     self.boardPinArray.append(pinDict)
             self.jsonDictionary['pins'] = self.boardPinArray
             self.allPins = [];
@@ -375,11 +391,15 @@ class BoardDetails(Universal):
                         pinDict = pin.toArray()
                         pinDict["x"] = self.board.getPinXLocation(pin.key().id())
                         pinDict["y"] = self.board.getPinYLocation(pin.key().id())
+                        pinDict["width"] = self.board.getPinWidth(pin.key().id())
+                        pinDict["height"] = self.board.getPinHeight(pin.key().id())
                         self.boardPinArray.index(pinDict)
                     except Exception:
                         pinDict = pin.toArray()
                         pinDict["x"] = self.board.getPinXLocation(pin.key().id())
                         pinDict["y"] = self.board.getPinYLocation(pin.key().id())
+                        pinDict["width"] = self.board.getPinWidth(pin.key().id())
+                        pinDict["height"] = self.board.getPinHeight(pin.key().id())
                         self.allPins.append(pinDict)
                     
                 for pin in self.publicPins():
@@ -387,11 +407,15 @@ class BoardDetails(Universal):
                         pinDict = pin.toArray()
                         pinDict["x"] = self.board.getPinXLocation(pin.key().id())
                         pinDict["y"] = self.board.getPinYLocation(pin.key().id())
+                        pinDict["width"] = self.board.getPinWidth(pin.key().id())
+                        pinDict["height"] = self.board.getPinHeight(pin.key().id())
                         self.boardPinArray.index(pinDict)
                     except Exception:
                         pinDict = pin.toArray()
                         pinDict["x"] = self.board.getPinXLocation(pin.key().id())
                         pinDict["y"] = self.board.getPinYLocation(pin.key().id())
+                        pinDict["width"] = self.board.getPinWidth(pin.key().id())
+                        pinDict["height"] = self.board.getPinHeight(pin.key().id())
                         self.allPins.append(pinDict)
                     
             self.jsonDictionary['publicPins'] = self.allPins;
@@ -445,8 +469,9 @@ class BoardDetails(Universal):
             return
         elif self.request.get("method") == "AddPin":
             key = db.Key.from_path('Pin', long(self.request.get("pinID")))
+            self.pin = db.get(key)
             self.board.pins.append(key);
-            self.board.addLocation(long(self.request.get("pinID")),0,0)
+            self.board.addLocation(long(self.request.get("pinID")),0,0,self.pin.imageWidth,self.pin.imageHeight)
             self.board.put()
             self.error(200)
             self.response.out.write("Success")
@@ -474,7 +499,7 @@ class BoardDetails(Universal):
             self.response.out.write(self.board.private)
             return;
         elif self.request.get("method") == "UpdatePinLocation":
-            self.board.updatePinLocation(self.request.get("pinID"),self.request.get("x"),self.request.get("y"))
+            self.board.updatePinLocation(self.request.get("pinID"),self.request.get("x"),self.request.get("y"),self.request.get("width"),self.request.get("height"))
             self.board.put()
             self.error(200)
             self.response.out.write(json.dumps(self.board.locations))
