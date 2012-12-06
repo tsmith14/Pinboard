@@ -3,11 +3,13 @@ Created on Aug 31, 2012
 
 @author: Tyler Smith
 '''
+
 import webapp2
 import jinja2
 import os
 import json
 import logging
+
 from google.appengine.ext import db
 from google.appengine.api import users
 from google.appengine.api import urlfetch
@@ -66,6 +68,7 @@ class Board(db.Model):
         private = db.BooleanProperty()
         pins = db.ListProperty(db.Key)
         locations = db.StringListProperty()
+        textLabel = db.StringProperty()
         date = db.DateTimeProperty(auto_now_add=True)
         owner = db.StringProperty()
         
@@ -134,9 +137,18 @@ class Board(db.Model):
                     self.locations.remove(location)
                     self.locations.append(json.dumps({"id":pinID,"x":x,"y":y,"width":width,"height":height}))                   
                     return
+                
+        def updateTextLabel(self,fontStyle,fontSize,fontName,textColor,text,x,y):
+            self.textLabel = json.dumps({"fontStyle":fontStyle,"fontSize":fontSize,"fontName":fontName,"textColor":textColor,"text":text,"x":x,"y":y})
+            return
+        
+        def getTextLabel(self):
+            if self.textLabel:
+                return json.loads(self.textLabel)
+            return None
         
         def toArray(self):
-            return {"id":self.key().id(),"date":self.date.strftime("%Y-%m-%d %I:%M:%s"),"name":self.name,"private":self.private,"owner":self.owner}
+            return {"id":self.key().id(),"date":self.date.strftime("%Y-%m-%d %I:%M:%s"),"name":self.name,"textLabel":self.getTextLabel(),"private":self.private,"owner":self.owner}
         
 class Universal(webapp2.RequestHandler):
     def defineUser(self):
@@ -504,6 +516,13 @@ class BoardDetails(Universal):
             self.error(200)
             self.response.out.write(json.dumps(self.board.locations))
             return;
+        elif self.request.get("method") == "UpdateTextLabel":
+            self.board.updateTextLabel(self.request.get("fontStyle"),self.request.get("fontSize"),self.request.get("fontName"),
+                                       self.request.get("textColor"),self.request.get("text"),self.request.get("x"),
+                                       self.request.get("y"))
+            self.board.put()
+            self.error(200)
+            self.response.out.write(self.board.textLabel)
         else:
             self.board.name = self.request.get("name")
             self.board.setPrivateStatus(self.request.get("private"))

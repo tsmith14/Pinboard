@@ -1,5 +1,8 @@
 {% extends "master.html" %}
 {% block navContent %}
+<script type="text/javascript" src="/js/colorpicker.min.js"></script>
+<link rel="stylesheet" type="text/css" href="/css/colorpicker.css" />
+
 <ul style="" class="navigation-items">
 <li><a href="/board">Return to My Boards</a></li>	
 </ul>		
@@ -14,6 +17,37 @@
 		<canvas id="boardCanvas" width="854" height="480" style="margin: 10px auto;  background-color: white; border:3px solid lightgray;">
  			Sorry, your browser doesn't support the &lt;canvas&gt; element.
 		</canvas>	 
+	</div>
+	
+	<h2>Edit Text Label:</h2>
+	<div style="margin-top:50px; height:200px;">
+	  <div style="width:66%; float:left;">
+		<span>Text:</span><br/> <input type="text" id="textLabel" style="width:500px; font-size:16px; height:40px;" /><br/><br/><br/>
+		<span>Font Size:</span><br/>
+		<select id="fontSizeInput">
+			<option value=16>16</option>
+			<option value=20>20</option>
+			<option value=24>24</option>
+			<option value=28>28</option>
+			<option value=32>32</option>
+			<option value=36>36</option>
+			<option value=40>40</option>
+			<option value=44>44</option>
+			<option value=48>48</option>	
+		</select>
+	  </div>
+
+	  <div style="width:33%; float:left;">
+	     <span>Text Color:</span><br/>
+		 <div class="wrapper" style=>
+            <div id="picker" class="picker"></div>
+            <div id="indicator-picker" class="indicator"></div>
+         </div>
+         <div class="wrapper wrapper-slide">
+            <div id="slide" class="slide"></div>
+            <div id="indicator-slide" class="indicator"></div>
+         </div>
+       </div>
 	</div>
 
 	{% endif %}

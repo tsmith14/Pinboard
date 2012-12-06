@@ -17,6 +17,9 @@ var ctx;
 var dotRadius = 10;
 var dotIndex = 0;
 
+var movingText = false;
+var textLabel;
+
 function Vector(pointA,pointB) {
 	this.pointA = pointA;
 	this.pointB = pointB;
@@ -45,10 +48,10 @@ function Rectangle(topLeftPoint, bottomRightPoint)
 	this.topRightPoint = new Point(this.bottomRightPoint.x,this.topLeftPoint.y),
 	this.bottomLeftPoint = new Point(this.topLeftPoint.x,this.bottomRightPoint.y)
 	this.contains = function(point){
-		console.log("CONTAINS:");
-		console.log(this);
-		console.log(point);
-		console.log('*****');
+//		console.log("CONTAINS:");
+//		console.log(this);
+//		console.log(point);
+//		console.log('*****');
 		if (this.x <= point.x && this.x+this.width >= point.x && this.y <= point.y && this.y+this.height >= point.y)
 		{
 			console.log("CONTAINS TRUE");
@@ -85,8 +88,8 @@ function updateView()
 {
 	clearCanvas();
 	$.each(pins,function(index,pin){
-//		console.log(pin);
-		ctx.drawImage(pin.image,parseInt(pin['x']),parseInt(pin['y']),pin.image.width,pin.image.height);
+		console.log(pin.image);
+		ctx.drawImage(pin.image,parseInt(pin['x']),parseInt(pin['y']),pin.width,pin.height);
 		if (index == imageIndex)
 		{
 			  var centerX = parseInt(pin['x']);
@@ -99,11 +102,12 @@ function updateView()
 		}
 	});
 	
+	drawText();
+	
 }
 
 function drawDot(point)
 {
-	
      ctx.beginPath();
      ctx.arc(point.x, point.y, dotRadius, 0, 2 * Math.PI, false);
      ctx.fillStyle = 'green';
@@ -113,13 +117,27 @@ function drawDot(point)
      ctx.stroke();
 }
 
+function drawText()
+{
+	if (textLabel)
+	{
+		ctx.fillStyle = textLabel.textColor;
+		ctx.font = textLabel.fontStyle+" "+textLabel.fontSize+"pt "+textLabel.fontName;
+		ctx.fillText(textLabel.text, parseInt(textLabel.x), parseInt(textLabel.y));
+	}
+	
+}
+
+
 
 function createView()
 {
 	$.each(pins,function(index,pin){
+		console.log("HERE");
 		  var img = new Image();
 		  img.onload = function(){
 			  ctx.drawImage(img,parseInt(pin['x']),parseInt(pin['y']),parseInt(pin['width']),parseInt(pin['height']));
+			  drawText();
 		  };
 		  img.src = pin['imgUrl'];
 		  img.width = parseInt(pin['width']);
@@ -139,9 +157,19 @@ function getContent()
 		success: function(data)
 		{
 			pins = data['pins'];
-			console.log(pins);
+			console.log(data);
+			if (data.textLabel){
+				textLabel = data.textLabel;
+			}
+			else{
+				console.log("TEXTLABEL- DEFAULT");
+				textLabel = {"fontStyle":"bold","fontSize":"16","fontName":"Arial","textColor":"#000000","text":data.name,"x":390,"y":240};
+			}
+			finishSetup();
 			createView();
-			console.log("Data found successfully: " + data);
+			setupColorPicker();
+			console.log("Data found successfully: ");
+			console.log(data);
 		},
 		error: function(error)
 		{
@@ -154,84 +182,102 @@ function getContent()
 function checkImage(e)
 {
 	var imageFound = false;
-	$.each(pins,function(index,pin)
-	{
-		var image = pin.image;
+	var metrics = ctx.measureText(textLabel.text);
+    var width = metrics.width;
+    var height = parseInt(textLabel.fontSize);
 
+    if (textLabel.text != "")
+    {
 		var mousePosition = new Point(parseInt(e.pageX - $(e.target).offset().left),parseInt(e.pageY - $(e.target).offset().top));
-		var imageBounds = new Rectangle(new Point(pin.x,pin.y),new Point(parseInt(pin.x) + parseInt(image.width), parseInt(pin.y) +parseInt(image.height)));
 
-		var dotPoint = new Point(dotRadius,dotRadius);
-		
-		var outerBounds = new Rectangle(imageBounds.topLeftPoint.subtract(dotPoint),
-										imageBounds.bottomRightPoint.add(dotPoint));
-
-		if (outerBounds.contains(mousePosition))
+    	var textLabelBounds = new Rectangle(new Point(textLabel.x-20,textLabel.y-height),new Point(textLabel.x+width+40,textLabel.y+height*2));
+    	
+    	if (textLabelBounds.contains(mousePosition))
 		{
-			var topLeftCircle     =  new Rectangle(imageBounds.topLeftPoint.subtract(dotPoint),
-												   imageBounds.topLeftPoint.add(dotPoint));
-			var topRightCircle    =  new Rectangle(imageBounds.topRightPoint.subtract(dotPoint),
-					  						       imageBounds.topRightPoint.add(dotPoint));
-			var bottomLeftCircle  =  new Rectangle(imageBounds.bottomLeftPoint.subtract(dotPoint),
-					  							   imageBounds.bottomLeftPoint.add(dotPoint));
-			var bottomRightCircle =  new Rectangle(imageBounds.bottomRightPoint.subtract(dotPoint),
-					                               imageBounds.bottomRightPoint.add(dotPoint));
-			
-			if (topLeftCircle.contains(mousePosition))
-			{
-				isDragging = false;
-				isResizing = true;
-				imageFound = true;
-				dotIndex = 1; 
-			}
-			else if (topRightCircle.contains(mousePosition))
-			{
-				isDragging = false;
-				isResizing = true;
-				imageFound = true;
-				dotIndex = 2; 
-			}
-			else if (bottomLeftCircle.contains(mousePosition))
-			{
-				isDragging = false;
-				isResizing = true;
-				imageFound = true;
-				dotIndex = 3; 
-			}
-			else if (bottomRightCircle.contains(mousePosition))
-			{
-				isDragging = false;
-				isResizing = true;
-				imageFound = true;
-				dotIndex = 4; 
-			}
-			else if (imageBounds.contains(mousePosition))
-			{
-				isResizing = false;
-				isDragging = true;
-				imageFound = true;
-				dotIndex = 0;
-			}
-			else
-			{
-				//Mouse in blank space
-			}
-			if (imageFound)
-			{
-				startMousePosition = mousePosition;
-				currentImage = image;
-				imageIndex = index;
-				return;
-			}
-
+			movingText = true;
+			startMousePosition = mousePosition;
 		}
-	});
+    }
+    if(!movingText){
+		$.each(pins,function(index,pin)
+		{
+			var image = pin.image;
 	
-	if (!imageFound)
-	{
-		imageIndex = null;
-		updateView();
-	}			
+			var mousePosition = new Point(parseInt(e.pageX - $(e.target).offset().left),parseInt(e.pageY - $(e.target).offset().top));
+			var imageBounds = new Rectangle(new Point(pin.x,pin.y),new Point(parseInt(pin.x) + parseInt(image.width), parseInt(pin.y) +parseInt(image.height)));
+	
+			var dotPoint = new Point(dotRadius,dotRadius);
+			
+			var outerBounds = new Rectangle(imageBounds.topLeftPoint.subtract(dotPoint),
+											imageBounds.bottomRightPoint.add(dotPoint));
+	
+			if (outerBounds.contains(mousePosition))
+			{
+				var topLeftCircle     =  new Rectangle(imageBounds.topLeftPoint.subtract(dotPoint),
+													   imageBounds.topLeftPoint.add(dotPoint));
+				var topRightCircle    =  new Rectangle(imageBounds.topRightPoint.subtract(dotPoint),
+						  						       imageBounds.topRightPoint.add(dotPoint));
+				var bottomLeftCircle  =  new Rectangle(imageBounds.bottomLeftPoint.subtract(dotPoint),
+						  							   imageBounds.bottomLeftPoint.add(dotPoint));
+				var bottomRightCircle =  new Rectangle(imageBounds.bottomRightPoint.subtract(dotPoint),
+						                               imageBounds.bottomRightPoint.add(dotPoint));
+				
+				if (topLeftCircle.contains(mousePosition))
+				{
+					isDragging = false;
+					isResizing = true;
+					imageFound = true;
+					dotIndex = 1; 
+				}
+				else if (topRightCircle.contains(mousePosition))
+				{
+					isDragging = false;
+					isResizing = true;
+					imageFound = true;
+					dotIndex = 2; 
+				}
+				else if (bottomLeftCircle.contains(mousePosition))
+				{
+					isDragging = false;
+					isResizing = true;
+					imageFound = true;
+					dotIndex = 3; 
+				}
+				else if (bottomRightCircle.contains(mousePosition))
+				{
+					isDragging = false;
+					isResizing = true;
+					imageFound = true;
+					dotIndex = 4; 
+				}
+				else if (imageBounds.contains(mousePosition))
+				{
+					isResizing = false;
+					isDragging = true;
+					imageFound = true;
+					dotIndex = 0;
+				}
+				else
+				{
+					//Mouse in blank space
+				}
+				if (imageFound)
+				{
+					startMousePosition = mousePosition;
+					currentImage = image;
+					imageIndex = index;
+					return;
+				}
+	
+			}
+		});
+		
+		if (!imageFound)
+		{
+			imageIndex = null;
+			updateView();
+		}	
+    }
 }
 
 function clearCanvas()
@@ -241,7 +287,21 @@ function clearCanvas()
 
 function imageMoving(e)
 {
-	if (isDragging)
+	if (movingText){
+		var mouseX = e.pageX - $(e.target).offset().left;
+		var mouseY = e.pageY - $(e.target).offset().top;
+		var mousePosition = new Point(mouseX,mouseY);
+		
+		var newLocation = new Point(textLabel.x,textLabel.y).add(mousePosition).subtract(startMousePosition);
+
+		textLabel.x = newLocation.x;
+		textLabel.y = newLocation.y;
+
+		startMousePosition = mousePosition;
+
+		updateView();
+	}
+	else if (isDragging)
 	{
 		var mouseX = e.pageX - $(e.target).offset().left;
 		var mouseY = e.pageY - $(e.target).offset().top;
@@ -311,7 +371,11 @@ function imageMoving(e)
 
 function mouseReleased()
 {
-	if (isDragging)
+	if (movingText){
+		movingText = false;
+		saveTextLabel();
+	}
+	else if (isDragging)
 	{
 		savePostion();
 		isDragging = false;
@@ -353,19 +417,95 @@ function savePostion()
 	});
 }
 
+function saveTextLabel()
+{
+	$.ajax(url,
+	{
+		type:"POST",
+		data: 
+		{
+			"method": "UpdateTextLabel",
+			"fontStyle":"bold",
+			"fontSize":textLabel.fontSize,
+			"fontName":textLabel.fontName,
+			"textColor":textLabel.textColor,
+			"text":textLabel.text,
+			"x":textLabel.x,
+			"y":textLabel.y
+		},
+		success: function(data)
+		{
+			console.log("TextLabel updated!");
+		},
+		error: function(error)
+		{
+			alert("An error occurred finding the data: " + error["status"] + " error");
+		}
+				
+	});
+}
 
-$(document).ready(function(){
-	getContent();
+
+/**** Adding in customizable text label *****/
+
+function textChanged()
+{
+	textLabel.text = $(this).val();
+	textLabelChanged();
+}
+
+function fontSizeChanged()
+{
+	textLabel.fontSize = $(this).val();
+	textLabelChanged();
+}
+
+function textLabelChanged()
+{
+	saveTextLabel();
+	updateView();
+}
+
+function finishSetup()
+{
+	canvas = document.getElementById('boardCanvas');
+	ctx = canvas.getContext('2d');
+	
 	if (isEditable)
 	{
 		$("#boardCanvas").on("mousedown",checkImage);
 		$("#boardCanvas").on("mousemove",imageMoving);
 		$("body").on("mouseup",mouseReleased);
+		
+		console.log("TEXTLABEL!");
+		$("#textLabel").val(textLabel.text);
+		$("#textLabel").on("change",textChanged);
+		
+		$("#fontSizeInput").val( textLabel.fontSize ).attr('selected',true);
+		$("#fontSizeInput").on("change",fontSizeChanged);
+		
 	}
-	canvas = document.getElementById('boardCanvas');
-	ctx = canvas.getContext('2d');
-	
-	var v = new Vector(new Point(1,1),new Point(4,5));
-	console.log(v.add(new Vector(new Point(1,2),new Point(4,2))));
+}
+
+function setupColorPicker()
+{
+	if (isEditable){
+		 colorPicker = ColorPicker(document.getElementById('slide'),
+	                document.getElementById('picker'),
+	                function(hex, hsv, rgb, mousePicker, mouseSlide) {
+	                    ColorPicker.positionIndicators(
+	                        document.getElementById('indicator-slide'), 
+	                        document.getElementById('indicator-picker'),
+	                        mouseSlide, mousePicker);
+	                    textLabel.textColor = hex;
+	                	textLabelChanged();
+	                });
+	        colorPicker.setHex(textLabel.textColor);
+	}
+}
+
+
+$(document).ready(function(){
+	getContent();
 	
 });
