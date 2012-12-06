@@ -89,7 +89,7 @@ function updateView()
 	clearCanvas();
 	$.each(pins,function(index,pin){
 		console.log(pin.image);
-		ctx.drawImage(pin.image,parseInt(pin['x']),parseInt(pin['y']),pin.width,pin.height);
+		ctx.drawImage(pin.image,parseInt(pin['x']),parseInt(pin['y']),pin.image.width,pin.image.height);
 		if (index == imageIndex)
 		{
 			  var centerX = parseInt(pin['x']);
